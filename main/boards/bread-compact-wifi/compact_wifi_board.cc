@@ -15,6 +15,7 @@
 #include <driver/i2c_master.h>
 #include <esp_lcd_panel_ops.h>
 #include <esp_lcd_panel_vendor.h>
+#include "mcp_uart_tools.h"
 
 #include "lamp_G.h"
 
@@ -165,6 +166,7 @@ public:
         InitializeSsd1306Display();
         InitializeButtons();
         InitializeTools();
+        RegisterMcpUartTools();
     }
 
     virtual Led* GetLed() override {
