@@ -16,6 +16,8 @@
 #include <esp_lcd_panel_ops.h>
 #include <esp_lcd_panel_vendor.h>
 
+#include "lamp_G.h"
+
 #ifdef SH1106
 #include <esp_lcd_panel_sh1106.h>
 #endif
@@ -150,6 +152,7 @@ private:
     // 物联网初始化，逐步迁移到 MCP 协议
     void InitializeTools() {
         static LampController lamp(LAMP_GPIO);
+        static Green_Lamp lamp_G(GPIO_NUM_17);
     }
 
 public:
