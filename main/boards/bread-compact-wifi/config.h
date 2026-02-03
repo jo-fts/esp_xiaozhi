@@ -52,8 +52,8 @@
 #define DISPLAY_MIRROR_X true
 #define DISPLAY_MIRROR_Y true
 
-#define UART_TX_PIN GPIO_NUM_10              //uart
-#define UART_RX_PIN GPIO_NUM_18
+#define UART_TX_PIN GPIO_NUM_20              //uart
+#define UART_RX_PIN GPIO_NUM_21
 
 // A MCP Test: Control a lamp
 #define LAMP_GPIO GPIO_NUM_18

@@ -17,7 +17,7 @@
 #define TAG "MCP_UART"
 
 // 停止指令
-static const char* STOP_CMD = "ZK";
+static const char* STOP_CMD = "ZK\n";
 // 2秒自动停止定时器
 static TimerHandle_t auto_stop_timer = NULL;
 
@@ -80,7 +80,7 @@ static void SendUartCommand(const char* cmd) {
 
 // 定时器回调：自动发送停止指令
 static void AutoStopCallback(TimerHandle_t xTimer) {
-    SendUartCommand(STOP_CMD);
+    // SendUartCommand(STOP_CMD);
     ESP_LOGI(TAG, "自动发送停止指令: %s", STOP_CMD);
 }
 
@@ -98,7 +98,7 @@ static void StartOrResetStopTimer() {
 // 发送动作指令并自动2秒后停止
 static void SendActionCommand(const char* cmd) {
     SendUartCommand(cmd);
-    StartOrResetStopTimer();
+    // StartOrResetStopTimer();
 }
 
 // 立即停止（发送ZK并停止定时器）
@@ -114,7 +114,7 @@ void RegisterMcpUartTools() {
     auto& mcp_server = McpServer::GetInstance();
     // 前进
     mcp_server.AddTool("self.uart.go_forward", "往前进移动，发送KA", PropertyList(), [](const PropertyList&) -> ReturnValue {
-SendActionCommand("KA");
+        SendActionCommand("KA\n");
         return true;
     });
     // 后退
