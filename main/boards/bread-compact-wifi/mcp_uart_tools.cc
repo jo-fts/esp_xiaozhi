@@ -63,6 +63,68 @@ gpio_config(&io_conf);
         }
 }
 
+
+static void InitializeNewUart() {
+    static bool initialized = false;
+    if (initialized) return;
+    initialized = true;
+
+    uart_config_t uart_config = {
+        .baud_rate = NEW_UART_BAUD_RATE,
+        .data_bits = UART_DATA_8_BITS,
+        .parity    = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .source_clk = UART_SCLK_DEFAULT,
+    };
+
+    // 安装 UART 驱动程序
+    esp_err_t err = uart_driver_install(NEW_UART_PORT_NUM, NEW_UART_BUF_SIZE, NEW_UART_BUF_SIZE, 0, NULL, 0);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "新 UART 驱动安装失败: %d", err);
+        return;
+    }
+
+    err = uart_param_config(NEW_UART_PORT_NUM, &uart_config);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "新 UART 参数配置失败: %d", err);
+        return;
+    }
+
+    err = uart_set_pin(NEW_UART_PORT_NUM, NEW_UART_TX_PIN, NEW_UART_RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "新 UART 引脚配置失败: %d", err);
+        return;
+    }
+}
+
+//uart_2
+static std::string ReceiveNewUartDataWithTimeout(int timeout_ms) {
+    uint8_t data[NEW_UART_BUF_SIZE];
+    int len = uart_read_bytes(NEW_UART_PORT_NUM, data, NEW_UART_BUF_SIZE, pdMS_TO_TICKS(timeout_ms));
+    ESP_LOGI(TAG, "开始接收新串口数据，超时时间: %d ms", timeout_ms);
+
+    if (len > 0) {
+        char received_data[NEW_UART_BUF_SIZE] = {0};
+        strncpy(received_data, (char*)data, len);
+        received_data[len] = '\0';
+        ESP_LOGI(TAG, "接收到新串口数据: %s", received_data);
+        return std::string(received_data);
+    } else {
+        ESP_LOGW(TAG, "超时未接收到新串口数据");
+        return "No Data Received";
+    }
+}
+
+static void SendNewUartCommand(const char* cmd) {
+    InitializeNewUart();
+    vTaskDelay(pdMS_TO_TICKS(1500));
+    uart_write_bytes(NEW_UART_PORT_NUM, cmd, strlen(cmd));
+    ESP_LOGI(TAG, "发送新串口指令: %s", cmd);
+}
+
+
+//uart1
 // 串口发送函数
 static void SendUartCommand(const char* cmd) {
     InitializeUart();
@@ -82,35 +144,16 @@ static void SendUartCommand(const char* cmd) {
 static char received_data[UART_BUF_SIZE] = {0};
 
 // 串口接收函数
-// static void ReceiveUartData() {
-//     uint8_t data[UART_BUF_SIZE];
-//     int len = uart_read_bytes(UART_PORT_NUM, data, UART_BUF_SIZE,  pdMS_TO_TICKS(2000));
-//     if (len > 0) {
-//         // 将接收到的数据存储到全局变量中
-//         strncpy(received_data, (char*)data, len);
-//         received_data[len] = '\0';  // 确保字符串以'\0'结尾
-//         ESP_LOGI(TAG, "接收到串口数据: %s", received_data);
-//     }
-// }
-
-// 串口接收函数（带超时判断）
-static std::string ReceiveUartDataWithTimeout(int timeout_ms) {
+static void ReceiveUartData() {
     uint8_t data[UART_BUF_SIZE];
-    int len = uart_read_bytes(UART_PORT_NUM, data, UART_BUF_SIZE, pdMS_TO_TICKS(timeout_ms));
-    ESP_LOGI(TAG, "开始接收串口数据，超时时间: %d ms", timeout_ms);
+    int len = uart_read_bytes(UART_PORT_NUM, data, UART_BUF_SIZE,  pdMS_TO_TICKS(2000));
     if (len > 0) {
         // 将接收到的数据存储到全局变量中
         strncpy(received_data, (char*)data, len);
-        received_data[len] = '\0'; // 确保字符串以'\0'结尾
+        received_data[len] = '\0';  // 确保字符串以'\0'结尾
         ESP_LOGI(TAG, "接收到串口数据: %s", received_data);
-        return std::string(received_data); // 返回接收到的数据
-    } else {
-        ESP_LOGW(TAG, "超时未接收到数据");
-        return "No Data Received"; // 超时未接收数据的标准返回值
     }
 }
-
-
 
 // 定时器回调：自动发送停止指令
 static void AutoStopCallback(TimerHandle_t xTimer) {
@@ -214,21 +257,15 @@ void RegisterMcpUartTools() {
         return true;
     });
     
-    // mcp_server.AddTool("self.uart.receive_data", "接收串口数据并存储", PropertyList(), [](const PropertyList&) -> ReturnValue {
-    //     // 触发接收串口数据
-    //     ReceiveUartData();
-    //     return true;
-    // });
     mcp_server.AddTool("self.uart.receive_data", "接收串口数据并存储", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        // 调用带超时的接收函数，等待2秒
-      std::string result = ReceiveUartDataWithTimeout(2000);
-      ESP_LOGI(TAG, "工具返回结果: %s", result.c_str());
-      return result; // 返回接收结果
+        // 触发接收串口数据
+        ReceiveUartData();
+        return true;
     });
 
     // 新增工具：获取接收到的数据
-    // mcp_server.AddTool("self.uart.get_received_data", "获取接收到的串口数据", PropertyList(), [](const PropertyList&) -> ReturnValue {
-    //     // 返回接收到的数据
-    //     return std::string(received_data);
-    // });
+    mcp_server.AddTool("self.uart.get_received_data", "获取接收到的串口数据", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        // 返回接收到的数据
+        return std::string(received_data);
+    });
 }

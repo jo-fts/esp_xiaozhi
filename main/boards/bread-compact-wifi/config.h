@@ -55,6 +55,13 @@
 #define UART_TX_PIN GPIO_NUM_20              //uart
 #define UART_RX_PIN GPIO_NUM_21
 
+// 新增串口配置（假设使用 UART2）
+#define NEW_UART_PORT_NUM      UART_NUM_2
+#define NEW_UART_TX_PIN      GPIO_NUM_17  // 新增串口 TX 引脚
+#define NEW_UART_RX_PIN      GPIO_NUM_19  // 新增串口 RX 引脚
+#define NEW_UART_BAUD_RATE     115200
+#define NEW_UART_BUF_SIZE      1024
+
 // A MCP Test: Control a lamp
 #define LAMP_GPIO GPIO_NUM_18
 
