@@ -17,7 +17,7 @@
 #define TAG "MCP_UART"
 
 // 停止指令
-static const char* STOP_CMD = "ZK\n";
+static const char* STOP_CMD = "stop\n";
 // 2秒自动停止定时器
 static TimerHandle_t auto_stop_timer = NULL;
 
@@ -98,7 +98,7 @@ static std::string ReceiveUartDataWithTimeout(int timeout_ms) {
     uint8_t data[UART_BUF_SIZE];
     int len = uart_read_bytes(UART_PORT_NUM, data, UART_BUF_SIZE, pdMS_TO_TICKS(timeout_ms));
     ESP_LOGI(TAG, "开始接收串口数据，超时时间: %d ms", timeout_ms);
-    if (len > 0) {
+        if (len > 0) {
         // 将接收到的数据存储到全局变量中
         strncpy(received_data, (char*)data, len);
         received_data[len] = '\0'; // 确保字符串以'\0'结尾
@@ -147,34 +147,34 @@ static void SendStopCommand() {
 void RegisterMcpUartTools() {
     auto& mcp_server = McpServer::GetInstance();
     // 前进
-    mcp_server.AddTool("self.uart.go_forward", "往前进移动，发送KA", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("KA\n");
+    mcp_server.AddTool("self.uart.go_forward", "往前进移动，发送forward", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("forward\n");
         return true;
     });
     // 后退
-    mcp_server.AddTool("self.uart.back_up", "往后退移动，发送KE", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("KE");
+    mcp_server.AddTool("self.uart.back_up", "往后退移动，发送backward", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("backward\n");
         return true;
     });
     // 左转
-    mcp_server.AddTool("self.uart.turn_left", "往左转移动，发送KG", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("KG");
+    mcp_server.AddTool("self.uart.turn_left", "往左转移动，发送rotate_left", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("rotate_left\n");
         return true;
     });
-    // 右转
-    mcp_server.AddTool("self.uart.turn_right", "往右转移动，发送KC", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("KC");
+    // 右
+    mcp_server.AddTool("self.uart.turn_right", "往右转移动，发送rotate_right", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("rotate_right\n");
         return true;
     });
 
         // 右移
-    mcp_server.AddTool("self.uart.right", "往右方向移动，发送ZC", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("JC");
+    mcp_server.AddTool("self.uart.right", "往右方向移动，发送right", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("right\n");
         return true;
     });
         // 左移
-    mcp_server.AddTool("self.uart.right", "往左方向移动，发送ZG", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("JG");
+    mcp_server.AddTool("self.uart.right", "往左方向移动，发送left", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("left\n");
         return true;
     });
 
@@ -209,26 +209,37 @@ void RegisterMcpUartTools() {
         return true;
     });
     // 停止
-    mcp_server.AddTool("self.uart.stop", "停止停下，发送ZK", PropertyList(), [](const PropertyList&) -> ReturnValue {
+    mcp_server.AddTool("self.uart.stop", "停止停下，发送stop", PropertyList(), [](const PropertyList&) -> ReturnValue {
         SendStopCommand();
         return true;
     });
-    
+    // 新增工具：接收串口数据并存储
     // mcp_server.AddTool("self.uart.receive_data", "接收串口数据并存储", PropertyList(), [](const PropertyList&) -> ReturnValue {
-    //     // 触发接收串口数据
-    //     ReceiveUartData();
-    //     return true;
+    //     // 调用带超时的接收函数，等待2秒
+    //   std::string result = ReceiveUartDataWithTimeout(2000);
+    //   ESP_LOGI(TAG, "工具返回结果: %s", result.c_str());
+    //   return result; // 返回接收结果
     // });
     mcp_server.AddTool("self.uart.receive_data", "接收串口数据并存储", PropertyList(), [](const PropertyList&) -> ReturnValue {
         // 调用带超时的接收函数，等待2秒
+      InitializeUart();
       std::string result = ReceiveUartDataWithTimeout(2000);
       ESP_LOGI(TAG, "工具返回结果: %s", result.c_str());
       return result; // 返回接收结果
+});
+
+    // 点头、摇头、转头工具
+    mcp_server.AddTool("self.uart.servo_nob", "识别到需要做点头动作或者表示同意，发送nob", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("nob\n");
+        return true;
+    });
+    mcp_server.AddTool("self.uart.servo_shake", "识别到需要做摇头动作或者表示否定，发送shake", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("shake\n");
+        return true;
+    });
+     mcp_server.AddTool("self.uart.servo_circle", "转头演示，发送circle", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("circle\n");
+        return true;
     });
 
-    // 新增工具：获取接收到的数据
-    // mcp_server.AddTool("self.uart.get_received_data", "获取接收到的串口数据", PropertyList(), [](const PropertyList&) -> ReturnValue {
-    //     // 返回接收到的数据
-    //     return std::string(received_data);
-    // });
 }
