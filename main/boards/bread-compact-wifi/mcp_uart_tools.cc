@@ -147,69 +147,48 @@ static void SendStopCommand() {
 void RegisterMcpUartTools() {
     auto& mcp_server = McpServer::GetInstance();
     // 前进
-    mcp_server.AddTool("self.uart.go_forward", "往前进移动，发送forward", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("forward\n");
-        return true;
-    });
-    // 后退
-    mcp_server.AddTool("self.uart.back_up", "往后退移动，发送backward", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("backward\n");
+    mcp_server.AddTool("self.uart.go_forward", "发送qianjin，小狗往前进移动\r\n", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("@qianjin\r\n");
         return true;
     });
     // 左转
-    mcp_server.AddTool("self.uart.turn_left", "往左转移动，发送rotate_left", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("rotate_left\n");
+    mcp_server.AddTool("self.uart.stand", "发送@zhanli\r\n，小狗站立", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("@zhanli\r\n");
         return true;
     });
     // 右
-    mcp_server.AddTool("self.uart.turn_right", "往右转移动，发送rotate_right", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("rotate_right\n");
+    mcp_server.AddTool("self.uart.rest", "发送@paxia\r\n，小狗休息一下", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("@paxia\r\n");
         return true;
     });
 
         // 右移
-    mcp_server.AddTool("self.uart.right", "往右方向移动，发送right", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("right\n");
+    mcp_server.AddTool("self.uart.rock", "发送@yaobai\r\n，小狗摇摆", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("@yaobai\r\n");
         return true;
     });
         // 左移
-    mcp_server.AddTool("self.uart.right", "往左方向移动，发送left", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("left\n");
-        return true;
-    });
-
-    // 右上
-    mcp_server.AddTool("self.uart.upper_right", "往右上移动，发送KB", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("JB");
+    mcp_server.AddTool("self.uart.step", "发送@huodong\r\n，小狗踏步", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("@huodong\r\n");
         return true;
     });
     // 右下
-    mcp_server.AddTool("self.uart.low_right", "往右下移动，发送KD", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("JD");
+    mcp_server.AddTool("self.uart.zuozou", "往右移动，发送@zuozou\r\n", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("@zuozou\r\n");
         return true;
     });
     // 左上
-    mcp_server.AddTool("self.uart.up_left", "往左上移动，发送KH", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("JH");
+    mcp_server.AddTool("self.uart.youzou", "往左移动，发送@youzou\r\n", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("@youzou\r\n");
         return true;
     });
     // 左下
-    mcp_server.AddTool("self.uart.low_left", "往左下移动，发送KF", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("JF");
-        return true;
-    });
-    // 加速
-    mcp_server.AddTool("self.uart.speed_up", "加速，发送KX", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("KX");
-        return true;
-    });
-    // 减速
-    mcp_server.AddTool("self.uart.speed_cut", "减速，发送KY", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("KY");
+    mcp_server.AddTool("self.uart.zuoxia", "发送@zuoxia,小狗坐下\r\n", PropertyList(), [](const PropertyList&) -> ReturnValue {
+        SendActionCommand("@zuoxia\r\n");
         return true;
     });
     // 停止
-    mcp_server.AddTool("self.uart.stop", "停止停下，发送stop", PropertyList(), [](const PropertyList&) -> ReturnValue {
+    mcp_server.AddTool("self.uart.stop", "发送stop,停止停下", PropertyList(), [](const PropertyList&) -> ReturnValue {
         SendStopCommand();
         return true;
     });
@@ -220,25 +199,21 @@ void RegisterMcpUartTools() {
     //   ESP_LOGI(TAG, "工具返回结果: %s", result.c_str());
     //   return result; // 返回接收结果
     // });
-    mcp_server.AddTool("self.uart.receive_data", "接收串口数据并存储", PropertyList(), [](const PropertyList&) -> ReturnValue {
+    mcp_server.AddTool("self.camera.receive_data", "识别摄像头传回数据，并以通俗易懂的话解释", PropertyList(), [](const PropertyList&) -> ReturnValue {
         // 调用带超时的接收函数，等待2秒
       InitializeUart();
       std::string result = ReceiveUartDataWithTimeout(2000);
       ESP_LOGI(TAG, "工具返回结果: %s", result.c_str());
       return result; // 返回接收结果
-});
+    });
 
     // 点头、摇头、转头工具
-    mcp_server.AddTool("self.uart.servo_nob", "识别到需要做点头动作或者表示同意，发送nob", PropertyList(), [](const PropertyList&) -> ReturnValue {
+    mcp_server.AddTool("self.uart.servo_nob", "如果有人说出你的名字”东东“你就点头示意，发送nob", PropertyList(), [](const PropertyList&) -> ReturnValue {
         SendActionCommand("nob\n");
         return true;
     });
     mcp_server.AddTool("self.uart.servo_shake", "识别到需要做摇头动作或者表示否定，发送shake", PropertyList(), [](const PropertyList&) -> ReturnValue {
         SendActionCommand("shake\n");
-        return true;
-    });
-     mcp_server.AddTool("self.uart.servo_circle", "转头演示，发送circle", PropertyList(), [](const PropertyList&) -> ReturnValue {
-        SendActionCommand("circle\n");
         return true;
     });
 
